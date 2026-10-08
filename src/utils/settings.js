@@ -60,7 +60,7 @@ let appearanceOptionsCacheExpiry = 0;
 
 const defaults = {
   site_title: DEFAULT_SITE_TITLE,
-  custom_bg: '',
+  custom_bg: '/files/mist-mountains.svg',
   custom_bg_mobile: '',
   favicon: '',
   custom_head: '',
