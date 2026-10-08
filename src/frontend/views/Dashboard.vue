@@ -23,7 +23,21 @@
     </div>
 
     <template v-else>
-    <div class="nav-area">
+    <div class="nav-area" :class="{ collapsed: !navExpanded }">
+      <button
+        type="button"
+        class="nav-summary"
+        :aria-expanded="navExpanded"
+        @click="navExpanded = !navExpanded"
+      >
+        <span class="nav-summary-title">$ {{ sysConfig.site_title || DEFAULT_SITE_TITLE }}</span>
+        <span class="nav-summary-info">
+          <span class="nav-summary-chip">{{ currentViewLabel }}</span>
+          <span class="nav-summary-chip" :class="{ active: currentFilter !== 'all' }">{{ currentFilterLabel }}</span>
+          <span class="nav-summary-arrow">{{ navExpanded ? '▴' : '▾' }}</span>
+        </span>
+      </button>
+      <div v-show="navExpanded" class="nav-body">
       <div class="header-row">
         <div class="site-title">$ {{ sysConfig.site_title || DEFAULT_SITE_TITLE }}</div>
         <div class="controls-group">
@@ -112,6 +126,7 @@
             <span class="filter-tag-count">{{ filterOptionEntries.length }}</span>
           </button>
         </div>
+      </div>
       </div>
     </div>
 
@@ -331,6 +346,7 @@ const filterMeasure = ref(null)
 const filterMoreMeasure = ref(null)
 const filterVisibleCount = ref(Number.POSITIVE_INFINITY)
 const filterMoreOpen = ref(false)
+const navExpanded = ref(false)
 const mapInitialized = ref(false)
 const liveConnected = ref(false)
 const isLoading = ref(true)
@@ -468,6 +484,17 @@ watch(
 )
 
 watch(filterMoreLabel, scheduleFilterMeasurement, { flush: 'post' })
+
+const currentViewLabel = computed(() => ({
+  bar: '▤ ' + trans.value.barChart,
+  ring: '◌ ' + trans.value.ringChart,
+  table: '≡ ' + trans.value.table,
+  map: '◉ ' + trans.value.map
+}[currentView.value] || currentView.value))
+const currentFilterLabel = computed(() => {
+  const entry = filterOptionEntries.value.find(item => item.code === currentFilter.value)
+  return entry ? `${entry.label} ${entry.count}` : getFilterLabel(currentFilter.value)
+})
 
 const filteredServers = computed(() => {
   if (currentFilter.value === 'all') return servers.value
