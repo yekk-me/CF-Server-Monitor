@@ -1,3 +1,4 @@
+import { ALERT_OVERVIEW_KEY, resourceRuleSignature } from '../utils/alertOverview.js';
 import { getLatestMetricsForAllServers } from '../database/schema.js';
 import { clearServersListCache, getAllServers } from '../utils/cache.js';
 import {
@@ -1150,17 +1151,7 @@ export async function checkResourceAlerts(env) {
     const configuredRuleServers = [];
     const evaluatedRuleServers = [];
 
-    const configSignature = JSON.stringify({
-      rules: resourceConfig.rules.map(rule => ({
-        id: rule.id,
-        name: rule.name,
-        metric: rule.metric,
-        threshold: rule.threshold,
-        servers: rule.servers,
-        intervalMinutes: rule.intervalMinutes,
-        mode: rule.mode
-      }))
-    });
+    const configSignature = resourceRuleSignature(resourceConfig.rules);
 
     for (const rule of resourceConfig.rules) {
       const serverIds = getResourceAlertRuleServerIds(rule, allServers);
@@ -1288,6 +1279,23 @@ export async function checkResourceAlerts(env) {
 
     if (stateChanged) {
       await saveResourceAlertState(db, configSignature, alertState, hadStoredState);
+    }
+
+    const overviewStates = {};
+    for (const { key } of evaluatedRuleServers) {
+      overviewStates[key] = {
+        status: alertState[key]?.status === RESOURCE_ALERT_STATE_ACTIVE ? 'active' : 'normal'
+      };
+    }
+    try {
+      await db.prepare(
+        'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+      ).bind(ALERT_OVERVIEW_KEY, JSON.stringify({
+        checkedAt: now, signature: configSignature, states: overviewStates
+      })).run();
+    } catch (e) {
+      // An overview failure must not suppress the existing notification delivery.
+      console.warn('[ResourceAlert] overview snapshot failed:', e.message || e);
     }
 
     const notificationPayloads = buildResourceAlertNotificationPayloads(alertNodes, recoveredNodes);

@@ -1,3 +1,4 @@
+import { readAlertOverview } from '../utils/alertOverview.js';
 import { checkAuth, simpleAuthResponse } from '../middleware/auth.js';
 import { getDashboardLatencyHistory, getLatestMetrics, getLatestMetricsForAllServers } from '../database/schema.js';
 import { getAllServers, getServerDetail } from '../utils/cache.js';
@@ -292,4 +293,11 @@ export async function handleServersAPI(request, env, sys) {
   };
 
   return createSuccessResponse(data);
+}
+
+export async function handleOverviewAPI(request, env, sys) {
+  const isLoggedIn = await checkAuth(request, env, sys);
+  if (sys.is_public !== 'true' && !isLoggedIn) return simpleAuthResponse();
+  const servers = await getAllServers(env.DB, isLoggedIn);
+  return createSuccessResponse(await readAlertOverview(env.DB, sys, servers), { 'Cache-Control': 'no-store' });
 }
