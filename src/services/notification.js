@@ -1284,7 +1284,7 @@ export async function checkResourceAlerts(env) {
     const overviewStates = {};
     for (const { key } of evaluatedRuleServers) {
       overviewStates[key] = {
-        status: alertState[key]?.status === RESOURCE_ALERT_STATE_ACTIVE ? 'active' : 'normal'
+        status: activeMap.has(key) || alertState[key]?.status === RESOURCE_ALERT_STATE_ACTIVE ? 'active' : 'normal'
       };
     }
     try {

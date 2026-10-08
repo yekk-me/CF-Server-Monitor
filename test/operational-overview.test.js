@@ -100,7 +100,7 @@ test('scheduled checks publish evaluated status without blocking notifications o
   const originalFetch = globalThis.fetch;
   const originalWarn = console.warn;
   try {
-    for (const failSnapshot of [false, true]) {
+    for (const { failSnapshot, recovering } of [{ failSnapshot: false }, { failSnapshot: true }, { failSnapshot: false, recovering: true }]) {
       clearSiteSettingsCache(); clearServersListCache();
       let sent = 0, savedSnapshot;
       globalThis.fetch = async () => { sent++; return new Response('{}'); };
@@ -109,7 +109,13 @@ test('scheduled checks publish evaluated status without blocking notifications o
       const DB = { prepare(sql) {
         return {
           args: [], bind(...args) { this.args = args; return this; },
-          async first() { return sql.includes("key = 'site_options'") ? { value: JSON.stringify(site) } : null; },
+          async first() {
+            if (sql.includes("key = 'site_options'")) return { value: JSON.stringify(site) };
+            if (recovering && this.args[0] === 'resource_alert_state') return { value: JSON.stringify({
+              signature: resourceRuleSignature(rules), servers: { 'cpu:a': { status: 'recovered', recoveredAt: Date.now() } }
+            }) };
+            return null;
+          },
           async all() { return { results: sql.includes('FROM servers') ? [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] : [] }; },
           async run() {
             if (this.args[0] === 'resource_alert_overview') {
@@ -126,7 +132,7 @@ test('scheduled checks publish evaluated status without blocking notifications o
           return Response.json({ results: [{ ruleId: 'cpu', evaluatedServerIds: ['a'], alerts: [{ serverId: 'a', metrics: [metric] }], evaluations: [{ serverId: 'a', metrics: [metric] }] }] });
         } }; }
       } });
-      assert.equal(sent, 1);
+      assert.equal(sent, recovering ? 0 : 1);
       if (!failSnapshot) {
         assert.equal(savedSnapshot.states['cpu:a'].status, 'active');
         const output = buildAlertOverview(site, [{ id: 'a' }, { id: 'b' }], savedSnapshot);
