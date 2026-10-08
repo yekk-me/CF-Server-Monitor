@@ -21,6 +21,7 @@ export const DEFAULT_EXPIRE_NOTIFICATION_TIME = '12';
 export const ALL_WSS_REPORT_HOURS = Object.freeze(Array.from({ length: 24 }, (_, hour) => hour));
 export const RESOURCE_ALERT_WINDOW_MIN = 5;
 export const RESOURCE_ALERT_WINDOW_MAX = 10;
+export const RESOURCE_ALERT_MODE_INSTANT = 'instant';
 export const RESOURCE_ALERT_MODE_CONTINUOUS = 'continuous';
 export const RESOURCE_ALERT_MODE_AVERAGE = 'average';
 export const RESOURCE_ALERT_RULES_MAX = 20;
@@ -40,12 +41,16 @@ const LEGACY_DEFAULT_NOTIFICATION_WEBHOOK_BODIES = [
 ];
 export const NOTIFICATION_WEBHOOK_METHODS = ['GET', 'POST'];
 export const NOTIFICATION_WEBHOOK_FORMATS = ['json', 'form', 'text'];
+export const RESOURCE_ALERT_METRIC_LOAD1 = 'load1';
+export const RESOURCE_ALERT_METRIC_LOAD5 = 'load5';
 export const RESOURCE_ALERT_METRIC_CPU = 'cpu';
 export const RESOURCE_ALERT_METRIC_RAM = 'ram';
 export const RESOURCE_ALERT_METRIC_DISK = 'disk';
 export const RESOURCE_ALERT_METRIC_NET_IN = 'netIn';
 export const RESOURCE_ALERT_METRIC_NET_OUT = 'netOut';
 export const RESOURCE_ALERT_METRICS = [
+  RESOURCE_ALERT_METRIC_LOAD1,
+  RESOURCE_ALERT_METRIC_LOAD5,
   RESOURCE_ALERT_METRIC_CPU,
   RESOURCE_ALERT_METRIC_RAM,
   RESOURCE_ALERT_METRIC_DISK,
@@ -280,6 +285,7 @@ export function normalizeResourceAlertMbps(value) {
 
 export function normalizeResourceAlertMode(value) {
   const mode = String(value || '').trim().toLowerCase();
+  if (mode === RESOURCE_ALERT_MODE_INSTANT) return RESOURCE_ALERT_MODE_INSTANT;
   return mode === RESOURCE_ALERT_MODE_CONTINUOUS
     ? RESOURCE_ALERT_MODE_CONTINUOUS
     : RESOURCE_ALERT_MODE_AVERAGE;
@@ -317,6 +323,8 @@ function normalizeResourceAlertRuleName(value, metric, index) {
   const name = String(value || '').trim().slice(0, 80);
   if (name) return name;
   const labels = {
+    [RESOURCE_ALERT_METRIC_LOAD1]: 'Load (1m)',
+    [RESOURCE_ALERT_METRIC_LOAD5]: 'Load (5m)',
     [RESOURCE_ALERT_METRIC_CPU]: 'CPU',
     [RESOURCE_ALERT_METRIC_RAM]: 'RAM',
     [RESOURCE_ALERT_METRIC_DISK]: 'DISK',
@@ -342,6 +350,7 @@ function normalizeResourceAlertServers(value) {
 }
 
 function getDefaultResourceAlertThreshold(metric) {
+  if (metric === RESOURCE_ALERT_METRIC_LOAD1 || metric === RESOURCE_ALERT_METRIC_LOAD5) return '5';
   return metric === RESOURCE_ALERT_METRIC_NET_IN || metric === RESOURCE_ALERT_METRIC_NET_OUT
     ? '100'
     : '80';
@@ -349,7 +358,7 @@ function getDefaultResourceAlertThreshold(metric) {
 
 export function normalizeResourceAlertThreshold(value, metric) {
   const fallback = getDefaultResourceAlertThreshold(metric);
-  const normalized = metric === RESOURCE_ALERT_METRIC_NET_IN || metric === RESOURCE_ALERT_METRIC_NET_OUT
+  const normalized = [RESOURCE_ALERT_METRIC_NET_IN, RESOURCE_ALERT_METRIC_NET_OUT, RESOURCE_ALERT_METRIC_LOAD1, RESOURCE_ALERT_METRIC_LOAD5].includes(metric)
     ? normalizeResourceAlertMbps(value)
     : normalizeResourceAlertPercent(value);
   return Number(normalized) > 0 ? normalized : fallback;
@@ -405,6 +414,8 @@ export function getResourceAlertRuleThresholds(rule) {
   const metric = normalizeResourceAlertMetric(rule?.metric);
   const threshold = Number(normalizeResourceAlertThreshold(rule?.threshold, metric));
   return {
+    load1: metric === RESOURCE_ALERT_METRIC_LOAD1 ? threshold : 0,
+    load5: metric === RESOURCE_ALERT_METRIC_LOAD5 ? threshold : 0,
     cpuPercent: metric === RESOURCE_ALERT_METRIC_CPU ? threshold : 0,
     ramPercent: metric === RESOURCE_ALERT_METRIC_RAM ? threshold : 0,
     diskPercent: metric === RESOURCE_ALERT_METRIC_DISK ? threshold : 0,

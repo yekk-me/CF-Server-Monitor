@@ -124,6 +124,8 @@ function formatPercent(value) {
 
 function formatResourceMetric(metric) {
   const metricLabels = {
+    load1: '1 分钟负载',
+    load5: '5 分钟负载',
     cpu: 'CPU',
     ram: 'RAM',
     disk: 'DISK',
@@ -134,6 +136,9 @@ function formatResourceMetric(metric) {
   const label = metricLabels[metric.metric] || metric.metric;
   const valueLabel = metric.mode === 'average' ? '平均' : '当前';
   const value = metric.triggerValue ?? metric.current;
+  if (metric.metric === 'load1' || metric.metric === 'load5') {
+    return `${label} ${valueLabel} ${Number(value).toFixed(2)} > ${Number(metric.threshold).toFixed(2)}`;
+  }
   if (metric.metric === 'cpu' || metric.metric === 'ram' || metric.metric === 'disk') {
     return `${label} ${valueLabel} ${formatPercent(value)} > ${formatPercent(metric.threshold)}`;
   }
@@ -142,6 +147,8 @@ function formatResourceMetric(metric) {
 
 function getResourceMetricLabel(metric) {
   const metricLabels = {
+    load1: '1 分钟负载',
+    load5: '5 分钟负载',
     cpu: 'CPU',
     ram: 'RAM',
     disk: 'DISK',
@@ -153,6 +160,7 @@ function getResourceMetricLabel(metric) {
 }
 
 function formatResourceMetricValue(metric, value) {
+  if (metric?.metric === 'load1' || metric?.metric === 'load5') return Number(value).toFixed(2);
   if (metric?.metric === 'cpu' || metric?.metric === 'ram' || metric?.metric === 'disk') {
     return formatPercent(value);
   }

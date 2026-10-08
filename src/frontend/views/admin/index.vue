@@ -744,7 +744,7 @@ const normalizeWssReportHoursSetting = (value) => {
 
 const normalizeResourceAlertModeSetting = (value) => {
   const mode = String(value || '').trim().toLowerCase()
-  return mode === 'continuous' ? 'continuous' : 'average'
+  return ['instant', 'continuous'].includes(mode) ? mode : 'average'
 }
 
 const normalizeResourceAlertIntervalSetting = (value) => {
@@ -757,17 +757,17 @@ const normalizeResourceAlertIntervalSetting = (value) => {
 
 const normalizeResourceAlertMetricSetting = (value) => {
   const metric = String(value || '').trim()
-  return ['cpu', 'ram', 'disk', 'netIn', 'netOut'].includes(metric) ? metric : 'cpu'
+  return ['cpu', 'ram', 'disk', 'netIn', 'netOut', 'load1', 'load5'].includes(metric) ? metric : 'cpu'
 }
 
 const defaultResourceAlertThreshold = (metric) => (
-  metric === 'netIn' || metric === 'netOut' ? '100' : '80'
+  metric === 'load1' || metric === 'load5' ? '5' : (metric === 'netIn' || metric === 'netOut' ? '100' : '80')
 )
 
 const normalizeResourceAlertThresholdSetting = (value, metric) => {
   if (value === undefined || value === null || value === '') return defaultResourceAlertThreshold(metric)
   const number = Number(value)
-  const max = metric === 'netIn' || metric === 'netOut' ? 100000 : 100
+  const max = ['netIn', 'netOut', 'load1', 'load5'].includes(metric) ? 100000 : 100
   if (!Number.isFinite(number) || number <= 0 || number > max) return defaultResourceAlertThreshold(metric)
   return String(Math.round(number * 100) / 100)
 }

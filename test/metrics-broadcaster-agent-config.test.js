@@ -1210,3 +1210,61 @@ test('WSS history persistence keeps samples received during a D1 flush for the n
     Date.now = originalNow;
   }
 });
+test('load alert preserves absolute thresholds and instant mode through settings', async () => {
+  const { getResourceAlertRuleThresholds } = await import('../src/utils/settings.js');
+  const [rule] = normalizeResourceAlertRules([{
+    id: 'load', metric: 'load1', threshold: '5', mode: 'instant',
+    servers: ['server-1'], intervalMinutes: '5'
+  }]);
+  assert.equal(rule.metric, 'load1');
+  assert.equal(rule.mode, 'instant');
+  assert.equal(getResourceAlertRuleThresholds(rule).load1, 5);
+  assert.equal(getResourceAlertRuleThresholds({ ...rule, threshold: '125.5' }).load1, 125.5);
+});
+
+test('instant load alert uses the latest 1-minute load, with strict threshold and unknown handling', async () => {
+  const now = Math.floor(Date.now() / 60_000) * 60_000 + 30_000;
+  const cases = [
+    { load: '5.01 2 1', evaluated: true, triggered: true, value: 5.01 },
+    { load: '5 8 9', evaluated: true, triggered: false, value: 5 },
+    { load: '0 8 9', evaluated: true, triggered: false, value: 0 },
+    ...[undefined, null, '', 'bad 8 9', '-1 8 9', 'Infinity 8 9'].map(load => ({ load, evaluated: false, triggered: false }))
+  ];
+  for (const c of cases) {
+    const broadcaster = makeBroadcaster();
+    await broadcaster._cacheResourceAlertSamples([{ serverId: 'server-1', samples: [
+      { ts: now - 60_000, data: { load_avg: '8 8 8' } },
+      { ts: now, data: { load_avg: c.load } }
+    ] }], now);
+    const result = broadcaster._evaluateResourceAlertRule({
+      ruleId: 'load', serverIds: ['server-1'], windowMinutes: 5,
+      mode: 'instant', thresholds: { load1: 5 }
+    }, now);
+    assert.equal(result.evaluatedServerIds.length, c.evaluated ? 1 : 0, String(c.load));
+    assert.equal(result.alerts.length, c.triggered ? 1 : 0, String(c.load));
+    if (c.evaluated) assert.equal(result.evaluations[0].metrics[0].current, c.value);
+  }
+});
+
+test('instant load triggers with one fresh sample but not stale or pre-upgrade missing load', async () => {
+  const broadcaster = makeBroadcaster();
+  const now = Date.now();
+  const rule = { ruleId: 'load', serverIds: ['server-1'], windowMinutes: 5, mode: 'instant', thresholds: { load1: 5 } };
+  await broadcaster._cacheResourceAlertSamples([{ serverId: 'server-1', samples: [{ ts: now, data: { load: '6.2 3 1' } }] }], now);
+  assert.equal(broadcaster._evaluateResourceAlertRule(rule, now).alerts.length, 1);
+  assert.equal(broadcaster._evaluateResourceAlertRule(rule, now + 121_000).evaluatedServerIds.length, 0);
+  assert.equal(broadcaster._evaluateResourceAlertRule({ ...rule, mode: 'average' }, now).evaluatedServerIds.length, 0);
+  broadcaster.resourceAlertWindows.set('server-1', { samples: [{ ts: now, minuteTs: Math.floor(now / 60_000) * 60_000, cpu: 90 }] });
+  assert.equal(broadcaster._evaluateResourceAlertRule(rule, now).evaluatedServerIds.length, 0);
+});
+
+test('load alert and recovery notifications display load units instead of percent or Mbps', () => {
+  const rule = { id: 'load', name: '负载过高', metric: 'load1', mode: 'instant', intervalMinutes: '5' };
+  const metric = { metric: 'load1', mode: 'instant', current: 6.2, triggerValue: 6.2, threshold: 5 };
+  const server = { name: 'Mytess Cloud' };
+  const alerts = buildResourceAlertNotificationPayloads([{ rule, server, alert: { metrics: [metric] } }], []);
+  const recovery = buildResourceAlertNotificationPayloads([], [{ rule, server, metrics: [{ ...metric, current: 4.2 }] }]);
+  assert.match(alerts[0].msg, /1 分钟负载 6\.20/);
+  assert.match(recovery[0].msg, /1 分钟负载 4\.20/);
+  assert.doesNotMatch(alerts[0].msg + recovery[0].msg, /Mbps|%/);
+});

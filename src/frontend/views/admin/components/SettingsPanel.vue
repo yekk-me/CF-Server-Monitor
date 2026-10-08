@@ -536,7 +536,7 @@
 
               <div class="form-group flex-1">
                 <label class="form-label">{{ trans.resourceAlertThreshold }}</label>
-                <input type="number" min="0" :max="resourceAlertThresholdMax(rule.metric)" step="1" v-model="rule.threshold" class="form-input" :placeholder="resourceAlertThresholdPlaceholder(rule.metric)">
+                <input type="number" min="0" :max="resourceAlertThresholdMax(rule.metric)" :step="['load1', 'load5'].includes(rule.metric) ? 0.1 : 1" v-model="rule.threshold" class="form-input" :placeholder="resourceAlertThresholdPlaceholder(rule.metric)">
               </div>
             </div>
 
@@ -562,7 +562,7 @@
               </div>
 
               <div class="form-group flex-1">
-                <label class="form-label">{{ trans.resourceAlertInterval }}</label>
+                <label class="form-label">{{ rule.mode === 'instant' ? trans.resourceAlertRecoveryCooldown : trans.resourceAlertInterval }}</label>
                 <select v-model="rule.intervalMinutes" class="form-select">
                   <option v-for="option in resourceAlertIntervalOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
@@ -571,6 +571,7 @@
               <div class="form-group flex-1">
                 <label class="form-label">{{ trans.resourceAlertMode }}</label>
                 <select v-model="rule.mode" class="form-select">
+                  <option value="instant">{{ trans.resourceAlertModeInstant }}</option>
                   <option value="average">{{ trans.resourceAlertModeAverage }}</option>
                   <option value="continuous">{{ trans.resourceAlertModeContinuous }}</option>
                 </select>
@@ -1227,6 +1228,8 @@ const setResourceAlertRuleNameInput = (ruleId, input) => {
 }
 
 const resourceAlertMetricOptions = computed(() => [
+  { value: 'load1', label: props.trans.resourceAlertMetricLoad1 },
+  { value: 'load5', label: props.trans.resourceAlertMetricLoad5 },
   { value: 'cpu', label: props.trans.resourceAlertMetricCpu || 'CPU (%)' },
   { value: 'ram', label: props.trans.resourceAlertMetricRam || 'RAM (%)' },
   { value: 'disk', label: props.trans.resourceAlertMetricDisk || 'DISK (%)' },
@@ -1311,8 +1314,8 @@ const resourceAlertServerSelectLabel = (rule) => {
 
 const createRuleId = () => `rule_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 const isNetworkAlertMetric = metric => metric === 'netIn' || metric === 'netOut'
-const resourceAlertThresholdPlaceholder = metric => isNetworkAlertMetric(metric) ? '100' : '80'
-const resourceAlertThresholdMax = metric => isNetworkAlertMetric(metric) ? 100000 : 100
+const resourceAlertThresholdPlaceholder = metric => ['load1', 'load5'].includes(metric) ? '5' : (isNetworkAlertMetric(metric) ? '100' : '80')
+const resourceAlertThresholdMax = metric => ['netIn', 'netOut', 'load1', 'load5'].includes(metric) ? 100000 : 100
 
 const normalizeRuleThreshold = (rule) => {
   const threshold = Number(rule.threshold)

@@ -69,6 +69,7 @@ const RESOURCE_ALERT_CACHE_ACTIVE_GRACE_MS = 3 * 60 * 1000;
 const RESOURCE_ALERT_LATEST_TOLERANCE_MS = 2 * 60 * 1000;
 const RESOURCE_ALERT_MIN_SAMPLE_RATIO = 0.4;
 const RESOURCE_ALERT_MIN_SAMPLE_COUNT = 2;
+const RESOURCE_ALERT_MODE_INSTANT = 'instant';
 const RESOURCE_ALERT_MODE_AVERAGE = 'average';
 const RESOURCE_ALERT_MODE_CONTINUOUS = 'continuous';
 function getAlertCutoffMinute(now, buckets) {
@@ -170,6 +171,14 @@ function maskPublicIpUpdate(update) {
   };
 }
 
+function parseLoadAverage(value, index) {
+  if (typeof value !== 'string') return null;
+  const part = value.trim().split(/\s+/)[index];
+  if (!part || !/^\d+(?:\.\d+)?$/.test(part)) return null;
+  const number = Number(part);
+  return Number.isFinite(number) ? number : null;
+}
+
 function normalizeResourceAlertSample(sample) {
   if (!sample || typeof sample !== 'object') {
     return null;
@@ -200,6 +209,8 @@ function normalizeResourceAlertSample(sample) {
     ts,
     minuteTs: Math.floor(ts / RESOURCE_ALERT_BUCKET_MS) * RESOURCE_ALERT_BUCKET_MS,
     cpu,
+    load1: parseLoadAverage(metrics.load ?? metrics.load_avg, 0),
+    load5: parseLoadAverage(metrics.load ?? metrics.load_avg, 1),
     ram,
     disk,
     netIn,
@@ -215,6 +226,8 @@ function normalizeThresholds(thresholds = {}) {
   };
 
   return {
+    load1: normalize(thresholds.load1),
+    load5: normalize(thresholds.load5),
     cpu: normalize(thresholds.cpuPercent),
     ram: normalize(thresholds.ramPercent),
     disk: normalize(thresholds.diskPercent),
@@ -225,6 +238,7 @@ function normalizeThresholds(thresholds = {}) {
 }
 
 function normalizeResourceAlertMode(value) {
+  if (String(value || '').trim().toLowerCase() === RESOURCE_ALERT_MODE_INSTANT) return RESOURCE_ALERT_MODE_INSTANT;
   return String(value || '').trim().toLowerCase() === RESOURCE_ALERT_MODE_CONTINUOUS
     ? RESOURCE_ALERT_MODE_CONTINUOUS
     : RESOURCE_ALERT_MODE_AVERAGE;
@@ -1918,6 +1932,8 @@ export class MetricsBroadcaster {
     const mode = normalizeResourceAlertMode(rule.mode);
     const thresholds = normalizeThresholds(rule.thresholds);
     const metricThresholds = [
+      ['load1', thresholds.load1],
+      ['load5', thresholds.load5],
       ['cpu', thresholds.cpu],
       ['ram', thresholds.ram],
       ['disk', thresholds.disk],
@@ -1937,7 +1953,8 @@ export class MetricsBroadcaster {
       const samples = (this.resourceAlertWindows.get(serverId)?.samples || [])
         .filter(sample => sample && Number(sample.minuteTs) >= cutoffMinute)
         .sort((a, b) => a.minuteTs - b.minuteTs);
-      if (!hasSufficientResourceAlertSamples(samples, windowMinutes)) continue;
+      if (samples.length === 0) continue;
+      if (mode !== RESOURCE_ALERT_MODE_INSTANT && !hasSufficientResourceAlertSamples(samples, windowMinutes)) continue;
 
       const latestSample = samples[samples.length - 1];
       if (!latestSample || now - latestSample.ts > getResourceAlertLatestTolerance(samples)) continue;
@@ -1946,10 +1963,12 @@ export class MetricsBroadcaster {
       const evaluationMetrics = [];
       let canEvaluateAllMetrics = true;
       for (const [metric, threshold] of metricThresholds) {
-        const metricSamples = samples
+        const evaluationSamples = mode === RESOURCE_ALERT_MODE_INSTANT ? [latestSample] : samples;
+        const metricSamples = evaluationSamples
           .map(sample => ({ sample, value: getMetricValue(sample, metric) }))
           .filter(item => item.value !== null);
-        if (!hasSufficientResourceAlertSamples(metricSamples.map(item => item.sample), windowMinutes)) {
+        if (metricSamples.length === 0 || (mode !== RESOURCE_ALERT_MODE_INSTANT &&
+          !hasSufficientResourceAlertSamples(metricSamples.map(item => item.sample), windowMinutes))) {
           canEvaluateAllMetrics = false;
           break;
         }
