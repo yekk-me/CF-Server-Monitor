@@ -515,7 +515,7 @@ function buildNotificationContext(settings, msg, context = {}) {
     : clients.length;
   const event = context.event || inferNotificationEvent(msg);
   return {
-    title: '💌 Cloudflare Server Monitor',
+    title: '🖥️ Mytess Server Monitor',
     event,
     emoji: context.emoji || inferNotificationEmoji(event),
     client: context.client || clients.join(', '),
