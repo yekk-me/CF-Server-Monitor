@@ -6,6 +6,10 @@ compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
 keep_vars = true
+workers_dev = true
+routes = [
+  { pattern = "monitor.mytess.net", custom_domain = true }
+]
 
 # 定时任务配置（UTC）
 # - 每分钟：执行离线节点、资源告警
