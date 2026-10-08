@@ -436,8 +436,75 @@ body::before {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-top: none;
-    padding: 16px;
-    margin-bottom: 20px;
+    padding: 0;
+    margin-bottom: 12px;
+}
+
+.nav-summary {
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 7px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: var(--terminal-font);
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.nav-summary:hover {
+    background: var(--bg-hover);
+}
+
+.nav-summary-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--accent-green);
+}
+
+.nav-summary-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.nav-summary-chip {
+    padding: 2px 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    background: var(--bg-card);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.nav-summary-chip.active {
+    color: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+.nav-summary-arrow {
+    color: var(--accent-cyan);
+    width: 12px;
+    text-align: center;
+}
+
+.nav-body {
+    padding: 10px 12px 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.nav-body .filter-wrap {
+    margin-bottom: 0;
 }
 
 .nav-bar {
@@ -457,7 +524,7 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     flex-wrap: wrap;
     gap: 12px;
 }
@@ -808,13 +875,13 @@ body::before {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     align-items: center;
 }
 
 .stat-item {
     background: var(--bg-card);
-    padding: 14px 16px;
+    padding: 8px 12px;
     text-align: center;
 }
 
@@ -822,7 +889,8 @@ body::before {
     color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
+    font-size: 11px;
 }
 
 .stat-main-value {
@@ -1071,7 +1139,7 @@ body::before {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    padding: 14px;
+    padding: 10px 12px;
     text-decoration: none;
     color: inherit;
     transition: all 0.2s;
@@ -1092,7 +1160,7 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .server-space {
@@ -1131,7 +1199,7 @@ body::before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     color: var(--text-primary);
     font-size: 12px;
 }
@@ -1268,7 +1336,7 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 14px;
+    padding: 10px 12px;
     border-radius: 8px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.006) 30%, rgba(0, 0, 0, 0.02) 100%), var(--bg-secondary);
     border-color: rgba(255, 255, 255, 0.15);
@@ -1280,14 +1348,14 @@ body::before {
 
 
 .server-card-ring-divider {
-    margin: 12px 0 14px;
+    margin: 8px 0 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .server-card-ring-metrics {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+    gap: 10px;
 }
 
 .metric-ring-item {
@@ -1300,7 +1368,7 @@ body::before {
 .metric-ring-chart {
     position: relative;
     width: 100%;
-    max-width: 128px;
+    max-width: 96px;
     aspect-ratio: 1;
     display: flex;
     align-items: center;
@@ -1382,7 +1450,7 @@ body::before {
     align-items: center;
     justify-content: center;
     gap: 5px;
-    margin-top: 10px;
+    margin-top: 6px;
     font-size: var(--ring-card-label-size);
     font-weight: 700;
     color: var(--text-primary);
@@ -1397,8 +1465,8 @@ body::before {
 }
 
 .server-card-network-panel {
-    margin-top: 16px;
-    padding: 12px;
+    margin-top: 10px;
+    padding: 8px 10px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.04);
@@ -1410,11 +1478,11 @@ body::before {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-bottom: 8px;
+    padding-bottom: 5px;
 }
 
 .server-card-network-row + .server-card-network-row {
-    padding-top: 8px;
+    padding-top: 5px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -1484,7 +1552,7 @@ body::before {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 8px;
     justify-content: space-between;
 }
 
@@ -1511,15 +1579,15 @@ body::before {
    13. Stat Bar Components
    -------------------------------------------------------------------------- */
 .server-stats {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .stat-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 4px;
+    gap: 10px;
+    margin-bottom: 2px;
 }
 
 .stat-key {
@@ -1624,15 +1692,15 @@ body::before {
 .three-net-panel {
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    padding: 8px;
+    gap: 5px;
+    padding: 6px 8px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
 }
 
 .three-net-panel-ring {
-    margin-top: 12px;
+    margin-top: 8px;
     padding: 0;
     background: transparent;
     border: 0;
@@ -1641,7 +1709,7 @@ body::before {
 .three-net-columns {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
+    gap: 14px;
     overflow: visible;
 }
 
@@ -1649,14 +1717,14 @@ body::before {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 7px;
+    gap: 4px;
 }
 
 .three-net-row {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
 
 .three-net-head {
@@ -1693,7 +1761,7 @@ body::before {
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 11px;
+    height: 9px;
     min-width: 0;
     overflow: visible;
 }
@@ -1944,14 +2012,14 @@ body::before {
    -------------------------------------------------------------------------- */
 .servers-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 10px;
 }
 
 /* Skip layout and paint work for cards outside the viewport. */
 .servers-grid > .server-card {
     content-visibility: auto;
-    contain-intrinsic-size: 0 420px;
+    contain-intrinsic-size: 0 340px;
 }
 
 /* A large live dashboard should settle updates without animating every item. */
@@ -1965,15 +2033,15 @@ body::before {
 }
 
 .group-section {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .group-header {
     font-size: 13px;
     font-weight: 600;
     color: var(--accent-green);
-    padding: 8px 0;
-    margin-bottom: 12px;
+    padding: 4px 0 6px;
+    margin-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -4889,8 +4957,11 @@ body.mikus-theme .mikus-stats-mascot-img {
     }
 
     .nav-area {
-        padding: 12px;
-        margin-bottom: 14px;
+        margin-bottom: 10px;
+    }
+
+    .nav-body {
+        padding: 10px;
     }
 
     .header-row {
@@ -5018,7 +5089,11 @@ body.mikus-theme .mikus-stats-mascot-img {
     }
 
     .global-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .global-stats .stat-main-value {
+        font-size: 13px;
     }
 
     .finance-summary-grid,
