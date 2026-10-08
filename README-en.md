@@ -693,6 +693,11 @@ If this project is helpful to you, you can support future maintenance through th
 
 - WeChat appreciation: scan the QR code
 
+### Partners & Recommendations
+
+If you need airport transfers, business transportation, or private chauffeur services in the Greater Bay Area, you can consider [Hong Kong Chauffeur](https://hkchauffeur.com/), serving Hong Kong, Shenzhen, Guangzhou, Zhuhai, Macau, and other major cities in the region.
+
+
 ## Credits
 
 - [CF-Server-Monitor-Pro](https://github.com/a63414262/CF-Server-Monitor-Pro)

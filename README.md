@@ -697,6 +697,10 @@ echo <CF_CDN_IP> <你的探针域名> | sudo tee -a /etc/hosts
 
 - 微信赞赏：扫码支持
 
+### 合作与推荐
+
+如果你需要粤港澳大湾区的机场接送、商务用车或私人包车服务，可参考 [Hong Kong Chauffeur](https://hkchauffeur.com/)，覆盖香港、深圳、广州、珠海、澳门等地区。
+
 ## 致谢
 
 - [CF-Server-Monitor-Pro](https://github.com/a63414262/CF-Server-Monitor-Pro)
